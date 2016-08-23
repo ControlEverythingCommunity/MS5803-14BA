@@ -4,65 +4,68 @@
 # This code is designed to work with the MS5803_14BA_I2CS I2C Mini Module available from ControlEverything.com.
 # https://www.controleverything.com/content/Analog-Digital-Converters?sku=MS5803-14BA_I2CS#tabs-0-product_tabset-2
 
-import smbus
+from OmegaExpansion import onionI2C
 import time
 
 # Get I2C bus
-bus = smbus.SMBus(1)
+i2c = onionI2C.OnionI2C()
 
 # MS5803_14BA address, 0x77(118)
 #		0x1E(30)	Reset command
-bus.write_byte(0x77, 0x1E)
+data = [0x1E]
+i2c.write(0x77, data)
 
 time.sleep(0.5)
 
 # Read 12 bytes of calibration data
 # Read pressure sensitivity
-data = bus.read_i2c_block_data(0x77, 0xA2, 2)
+data = i2c.readBytes(0x77, 0xA2, 2)
 C1 = data[0] * 256 + data[1]
 
 # Read pressure offset
-data = bus.read_i2c_block_data(0x77, 0xA4, 2)
+data = i2c.readBytes(0x77, 0xA4, 2)
 C2 = data[0] * 256 + data[1]
 
 # Read temperature coefficient of pressure sensitivity
-data = bus.read_i2c_block_data(0x77, 0xA6, 2)
+data = i2c.readBytes(0x77, 0xA6, 2)
 C3 = data[0] * 256 + data[1]
 
 # Read temperature coefficient of pressure offset
-data = bus.read_i2c_block_data(0x77, 0xA8, 2)
+data = i2c.readBytes(0x77, 0xA8, 2)
 C4 = data[0] * 256 + data[1]
 
 # Read reference temperature
-data = bus.read_i2c_block_data(0x77, 0xAA, 2)
+data = i2c.readBytes(0x77, 0xAA, 2)
 C5 = data[0] * 256 + data[1]
 
 # Read temperature coefficient of the temperature
-data = bus.read_i2c_block_data(0x77, 0xAC, 2)
+data = i2c.readBytes(0x77, 0xAC, 2)
 C6 = data[0] * 256 + data[1]
 
 # MS5803_14BA address, 0x77(119)
 #		0x40(64)	Pressure conversion(OSR = 256) command
-bus.write_byte(0x77, 0x40)
+data = [0x40]
+i2c.write(0x77, data)
 
 time.sleep(0.5)
 
 # Read digital pressure value
 # Read data back from 0x00(0), 3 bytes
 # D1 MSB2, D1 MSB1, D1 LSB
-value = bus.read_i2c_block_data(0x77, 0x00, 3)
+value = i2c.readBytes(0x77, 0x00, 3)
 D1 = value[0] * 65536 + value[1] * 256 + value[2]
 
 # MS5803_14BA address, 0x77(119)
 #		0x50(64)	Temperature conversion(OSR = 256) command
-bus.write_byte(0x77, 0x50)
+data = [0x50]
+i2c.write(0x77, data)
 
 time.sleep(0.5)
 
 # Read digital temperature value
 # Read data back from 0x00(0), 3 bytes
 # D2 MSB2, D2 MSB1, D2 LSB
-value = bus.read_i2c_block_data(0x77, 0x00, 3)
+value = i2c.readBytes(0x77, 0x00, 3)
 D2 = value[0] * 65536 + value[1] * 256 + value[2]
 
 dT = D2 - C5 * 256
